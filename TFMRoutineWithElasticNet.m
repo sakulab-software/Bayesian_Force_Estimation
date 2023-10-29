@@ -1,0 +1,23 @@
+
+function [LinearizedIBL, LinearizedDisturbedBD, LinearizedEF, E] =  ...
+    TFMRoutineWithElasticNet(...
+        divisionNumber, beadNumber, w, h, forceScale, ...
+        cellID, forceID, A, noiseRadius, randomState)
+
+[X, Y, SFx, SFy, IBLx, IBLy, ~, ...
+ ~, ~, ~, dBDx, dBDy, tfmc] = ... 
+    generateSyntheticData(divisionNumber, ...
+        beadNumber, w, h, forceScale, ...
+        cellID, forceID, noiseRadius, randomState);
+
+LinearizedIBL = reshape([reshape(IBLx, 1, []); reshape(IBLy, 1, [])], 1, []);    
+LinearizedDisturbedBD = reshape([reshape(dBDx, 1, []); reshape(dBDy, 1, [])], 1, []);
+
+gm = beadDensityMap(X, Y, beadNumber, IBLx, IBLy, divisionNumber, cellID);
+
+[EFx, EFy, ~] = TFMWithElasticNet(divisionNumber, tfmc.G, dBDx, dBDy, A);
+
+LinearizedEF = reshape([reshape(EFx, 1, []); reshape(EFy, 1, [])], 1, []);
+E = mean((SFx - EFx) .^ 2 + (SFy - EFy) .^ 2, 'all') * 2;
+
+end
